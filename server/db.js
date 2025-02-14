@@ -23,7 +23,7 @@ const createTables = async () => {
             id UUID PRIMARY KEY NOT NULL,
             name VARCHAR (225) NOT NULL
             );
-        CREATE TABLE favorites(
+        CREATE TABLE favorites (
             id UUID PRIMARY KEY,
             product_id UUID REFERENCES products(id) NOT NULL,
             user_id UUID REFERENCES users(id) NOT NULL,
@@ -83,11 +83,15 @@ const fetchProducts = async () => {
 //create favorite
 
 const createFavorite = async ({ user_id, product_id }) => {
-  const SQL = `
-        INSERT INTO favorites(id, product_id, user_id) VALUES ($1, $2, $3) RETURNING *
+  try {
+    const SQL = `
+        INSERT INTO favorites(id, user_id, product_id) VALUES ($1, $2, $3) RETURNING *
         `;
-  const response = await client.query(SQL, [uuidv4(), product_id, user_id]);
-  return response.rows[0];
+    const response = await client.query(SQL, [uuidv4(), user_id, product_id]);
+    return response.rows[0];
+  } catch (ex) {
+    next(ex);
+  }
 };
 
 //fetch favorites
@@ -104,7 +108,6 @@ const fetchFavorites = async (id) => {
 //destroy favorite
 
 const destroyFavorite = async ({ id, user_id }) => {
-  console.log(id, user_id);
   const SQL = `
     DELETE FROM favorites
     WHERE id = $1 AND user_id = $2
